@@ -9,14 +9,42 @@
 import UIKit
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
 
 	var window: UIWindow?
 
 
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-		// Override point for customization after application launch.
+	
+		// Initialize sign-in
+		var configureError: NSError?
+		GGLContext.sharedInstance().configureWithError(&configureError)
+		assert(configureError == nil, "Error configuring Google services: \(configureError)")
+		GIDSignIn.sharedInstance().delegate = self
+
 		return true
+	}
+
+	func application(_ app: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any] = [:]) -> Bool {
+		return GIDSignIn.sharedInstance().handle(url as URL!, sourceApplication: options[UIApplicationOpenURLOptionsKey.sourceApplication] as! String!, annotation: options[UIApplicationOpenURLOptionsKey.annotation])
+	}
+
+	func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!, withError error: Error!) {
+		if (error != nil) {
+			print(error)
+		} else {
+			NotificationCenter.default.post(name: NSNotification.Name(rawValue: "didSignIn"),
+				object: nil)
+		}
+	}
+	
+	func sign(_ signIn: GIDSignIn!, didDisconnectWith user: GIDGoogleUser!, withError error: Error!) {
+		if (error != nil) {
+			print(error)
+		} else {
+			NotificationCenter.default.post(name: NSNotification.Name(rawValue: "didDisconnect"),
+				object: nil)
+		}
 	}
 
 	func applicationWillResignActive(_ application: UIApplication) {
@@ -41,6 +69,4 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		// Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
 	}
 
-
 }
-
